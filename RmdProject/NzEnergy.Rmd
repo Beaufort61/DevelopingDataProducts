@@ -1,0 +1,45 @@
+---
+title: "New Zealand Energy Price Volatility"
+runtime: shiny
+output: html_document
+---
+
+<span style="color:grey">*This documented version makes use of a recent enhancement that allows shiny to be embedded in R markdown.*</span>
+
+Energy Price Indexes - Base Period December 1996 quarter (=1000) (Qrtly-Mar/Jun/Sep/Dec)
+
+Source: Statistics New Zealand  										
+Contact: Information Centre											
+Telephone: 0508 525 525											
+Email:info@stats.govt.nz											
+
+```{r echo = FALSE, message = FALSE}
+library(shiny)
+library(ggplot2)
+library(Hmisc)
+
+gdp <- read.csv("./NzEnergyPriceIndexes.csv", na.strings=c(".."))
+
+gdp$Date <- as.Date(ISOdate(substring(gdp$Date, 1, 4) ,3 * as.numeric(substring(gdp$Date, 6, 6)), 1)) 
+sectors <- colnames(gdp)
+sectors <- sectors[!(sectors=="Date")]
+
+inputPanel(
+  selectInput("Sector", "Sector:", sectors),
+  dateRangeInput("daterange", "Date range:", start = "1989-01-01")
+  )
+
+slice <- reactive( { gdp[(gdp$Date >= input$daterange[1]) & (gdp$Date <= input$daterange[2]),] } )
+
+volatility <- reactive( { a <- gdp[(gdp$Date >= input$daterange[1]) & (gdp$Date <= input$daterange[2]),]
+                          f <- paste(input$Sector, " ~ Date" )
+                          round(summary(aov(lm(data=a, formula=f)))[[1]]$"Mean Sq"[2])
+                        } )
+
+renderPlot({
+  ggplot(slice(), aes_string("Date", input$Sector)) + geom_line() + stat_summary(fun.data=mean_cl_normal) + geom_smooth(method='lm')
+  })
+
+renderText(paste("Anaylsis of variance calculates the mean square for residuals as", volatility(), "which is a consistent measure of volatility."))
+```
+

@@ -1,0 +1,57 @@
+New Zealand Energy Price Volatility
+========================================================
+author: Rod Barrington
+date:   21/02/2015
+
+========================================================
+title: false
+left: 80%
+
+Statistics New Zealand publish a wealth of information online via Infoshare including
+
+* Economic indicators
+* Population
+* Health
+* Government finance
+* Imports and exports
+* Tourism
+
+http://www.stats.govt.nz/infoshare/
+
+***
+![NZ Statistics icon](NzStats.jpg)
+
+========================================================
+title: false
+One dataset contains historical energy prices in the following sectors:
+
+```{r, echo=FALSE}
+gdp <- read.csv("./NzEnergyPriceIndexes.csv", fill = TRUE, na.strings=c(".."))
+
+gdp$Date <- as.Date(ISOdate(substring(gdp$Date, 1, 4) ,3 * as.numeric(substring(gdp$Date, 6, 6)), 1)) 
+sectors <- colnames(gdp)
+sectors <- sectors[!(sectors=="Date")]
+sectors
+```
+
+How do you investigate price volatility?
+========================================================
+```{r, echo=FALSE}
+library(ggplot2)
+
+ggplot(gdp, aes(Date)) + 
+  geom_line(aes(y = Commercial.Electricity, colour = "Commercial.Electricity")) + 
+  geom_line(aes(y = Household.Electricity, colour = "Household.Electricity")) + 
+  ylab("Price Index") +
+  ggtitle("Commercial and household electricity price index") +
+  theme(legend.title=element_blank())
+```
+
+========================================================
+title: false
+
+This shiny app allows you to find the price volatility for any given energy sector and time period.
+
+![Shiny App](aov.jpg)
+
+https://beaufort61.shinyapps.io/Project/NzEnergy.Rmd
